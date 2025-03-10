@@ -1,6 +1,7 @@
 {-# LANGUAGE ImportQualifiedPost #-}
 {-# LANGUAGE BlockArguments #-}
 {-# LANGUAGE ScopedTypeVariables, RankNTypes, TypeApplications #-}
+{-# LANGUAGE DataKinds #-}
 {-# LANGUAGE KindSignatures #-}
 {-# LANGUAGE MultiParamTypeClasses #-}
 {-# LANGUAGE FlexibleContexts, FlexibleInstances #-}
@@ -11,7 +12,7 @@ module Gpu.Vulkan.Khr.Surface.Internal (
 	S(..), group, unsafeDestroy, lookup, Group(..),
 
 	M.Capabilities(..),
-	Format(..), formatListToNew, formatFilter ) where
+	Format(..), formatToMiddle, formatListToNew, formatFilter ) where
 
 import Prelude hiding (lookup)
 import Control.Concurrent.STM
@@ -76,6 +77,9 @@ instance T.FormatToValue fmt => Show (Format fmt) where
 formatToNew :: M.Format ->
 	(forall fmt . T.FormatToValue fmt => Format fmt -> a) -> a
 formatToNew (M.Format fmt cs) f = T.formatToType fmt \(_ :: Proxy fmt) -> f $ Format @fmt cs
+
+formatToMiddle :: forall fmt . T.FormatToValue fmt => Format fmt -> M.Format
+formatToMiddle (Format cs) = M.Format (T.formatToValue @fmt) cs
 
 formatListToNew :: [M.Format] -> (forall fmts .
 	Show (HeteroParListC.PL T.FormatToValue Format fmts) =>
