@@ -36,7 +36,7 @@ getFormats :: PhysicalDevice.P -> S ss ->
 	(forall fmts .
 		Show (HeteroParListC.PL T.FormatToValue Format fmts) =>
 		HeteroParListC.PL T.FormatToValue Format fmts -> IO a) -> IO a
-getFormats pd sfc f = getFormatsOld pd sfc >>= \fmts -> formatListToNew fmts f
+getFormats pd sfc f = getFormatsOld pd sfc >>= \fmts -> formatListFromMiddle fmts f
 
 getFormatsFiltered :: T.FormatToValue fmt => PhysicalDevice.P -> S ss -> IO [Format fmt]
 getFormatsFiltered pd sfc = formatFilter <$> getFormatsOld pd sfc

@@ -12,7 +12,10 @@ module Gpu.Vulkan.Khr.Surface.Internal (
 	S(..), group, unsafeDestroy, lookup, Group(..),
 
 	M.Capabilities(..),
-	Format(..), formatToMiddle, formatListToNew, formatFilter ) where
+	Format(..),
+	formatToMiddle, formatFromMiddle, formatListFromMiddle, formatFilter
+
+	) where
 
 import Prelude hiding (lookup)
 import Control.Concurrent.STM
@@ -74,19 +77,19 @@ instance T.FormatToValue fmt => Show (Format fmt) where
 		"(Format {- " ++ show (T.formatToValue @fmt) ++ " -} " ++
 		show cs ++ ")"
 
-formatToNew :: M.Format ->
+formatFromMiddle :: M.Format ->
 	(forall fmt . T.FormatToValue fmt => Format fmt -> a) -> a
-formatToNew (M.Format fmt cs) f = T.formatToType fmt \(_ :: Proxy fmt) -> f $ Format @fmt cs
+formatFromMiddle (M.Format fmt cs) f = T.formatToType fmt \(_ :: Proxy fmt) -> f $ Format @fmt cs
 
 formatToMiddle :: forall fmt . T.FormatToValue fmt => Format fmt -> M.Format
 formatToMiddle (Format cs) = M.Format (T.formatToValue @fmt) cs
 
-formatListToNew :: [M.Format] -> (forall fmts .
+formatListFromMiddle :: [M.Format] -> (forall fmts .
 	Show (HeteroParListC.PL T.FormatToValue Format fmts) =>
 	HeteroParListC.PL T.FormatToValue Format fmts -> a) -> a
-formatListToNew [] f = f HeteroParListC.Nil
-formatListToNew (fmt : fmts) f = formatToNew fmt \fmt' ->
-	formatListToNew fmts \fmts' -> f $ fmt' :^* fmts'
+formatListFromMiddle [] f = f HeteroParListC.Nil
+formatListFromMiddle (fmt : fmts) f = formatFromMiddle fmt \fmt' ->
+	formatListFromMiddle fmts \fmts' -> f $ fmt' :^* fmts'
 
 formatMatched :: forall fmt . T.FormatToValue fmt =>
 	M.Format -> Maybe (Format fmt)
